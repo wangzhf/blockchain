@@ -1,9 +1,6 @@
 package main
 
-import (
-	"blc"
-	"fmt"
-)
+import "blc"
 
 func main() {
 	// 测试Block
@@ -61,14 +58,18 @@ func main() {
 	//fmt.Printf("0x%x\n", hash)
 
 	// 测试创世区块存入数据库
-	blockchain := blc.CreateBlockChainWithGenesisBlock("Genesis Block...")
-	fmt.Println(blockchain)
-	defer blockchain.DB.Close()
-	// 测试新添加的区块
-	blockchain.AddBlockToBlockChain("Send 100 to zhangsan")
-	blockchain.AddBlockToBlockChain("Send 200 to lisi")
-	blockchain.AddBlockToBlockChain("Send 300 to wangwu")
-	fmt.Println(blockchain)
-	blockchain.PrintChains()
+	//blockchain := blc.CreateBlockChainWithGenesisBlock("Genesis Block...")
+	//fmt.Println(blockchain)
+	//defer blockchain.DB.Close()
+	//// 测试新添加的区块
+	//blockchain.AddBlockToBlockChain("Send 100 to zhangsan")
+	//blockchain.AddBlockToBlockChain("Send 200 to lisi")
+	//blockchain.AddBlockToBlockChain("Send 300 to wangwu")
+	//fmt.Println(blockchain)
+	//blockchain.PrintChains()
+
+	// CLI操作
+	cli := blc.CLI{}
+	cli.Run()
 
 }

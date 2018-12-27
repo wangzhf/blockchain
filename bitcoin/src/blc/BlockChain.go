@@ -19,6 +19,51 @@ type BlockChain struct {
 	DB *bolt.DB
 }
 
+/**
+仅仅用来创建区块链
+如果数据库存在，证明区块链存在，直接结束该方法
+否则进行创建创世区块，并存入数据库中
+*/
+func CreateBlockChainWithGenesisBlock(data string) {
+	if dbExists() {
+		fmt.Println("数据库已存在...")
+		return
+	}
+
+	fmt.Println("创建创世区块：", data)
+	// 数据库不存在，说明第一次创建，然后存入到数据库中
+	fmt.Println("数据库不存在...")
+	// 创建创世区块
+	genesisBlock := CreateGenesisBlock(data)
+	// 打开数据库
+	db, err := bolt.Open(DBNAME, 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	// 存入数据表
+	err = db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucket([]byte(BLOCKTABLENAME))
+		if err != nil {
+			log.Panic(err)
+		}
+		if b != nil {
+			err = b.Put(genesisBlock.Hash, genesisBlock.Serilalize())
+			if err != nil {
+				log.Panic("创世区块存储有误...")
+			}
+			// 存储最新区块的hash
+			b.Put([]byte("l"), genesisBlock.Hash)
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+/**
 func CreateBlockChainWithGenesisBlock(data string) *BlockChain {
 	// 先判断数据库是否存在，如果有，从数据库读取
 	if dbExists() {
@@ -81,6 +126,7 @@ func CreateBlockChainWithGenesisBlock(data string) *BlockChain {
 	// 返回区块链对象
 	return &BlockChain{genesisBlock.Hash, db}
 }
+*/
 
 func (bc *BlockChain) AddBlockToBlockChain(data string) {
 	// 更新数据库
@@ -149,4 +195,33 @@ func (bc *BlockChain) PrintChains() {
 			break
 		}
 	}
+}
+
+// 获取区块链
+func GetBlockchainObject() *BlockChain {
+	// 如果数据库不存在，直接返回nil
+	if !dbExists() {
+		fmt.Println("数据库不存在，无法获取区块链...")
+		return nil
+	}
+
+	db, err := bolt.Open(DBNAME, 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var blockchain *BlockChain
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BLOCKTABLENAME))
+		if b != nil {
+			hash := b.Get([]byte("l"))
+			blockchain = &BlockChain{hash, db}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return blockchain
 }
